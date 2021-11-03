@@ -35,26 +35,16 @@ public class CarRentalSystem {
         return rentedCars.get(plateNo);
     }
 
-    public void rentCar(String plateNo, String ownerName) {
+    public void rentCar(String plateNo, String ownerName) throws ForbiddenName, BrokenCar {
         if (isCarRent(plateNo)) {
             System.out.println("Autovehiculul este deja inchiriat.");
             return;
         }
-
-        try {
             if (ownerName.equals("Mihai Dumitru") || (ownerName.equals("Dumitru Mihai"))) {
                 throw new ForbiddenName(ownerName);
-            }
-            if (plateNo.equals("B 100 VMS")){
+            } else if (plateNo.equals("B 100 VMS")) {
                 throw new BrokenCar(plateNo);
             }
-        } catch (ForbiddenName e) {
-            System.out.println(e.getMessage());
-            return;
-        } catch (BrokenCar e){
-            System.out.println(e.getMessage());
-            return;
-        }
 
         rentedCars.put(plateNo, ownerName);
         checkOwners(plateNo, ownerName);
@@ -103,7 +93,6 @@ public class CarRentalSystem {
         System.out.println("Numele introdus este incorect");
     }
 
-
     private static void printCommandsList() {
         System.out.println("help         - Afiseaza aceasta lista de comenzi");
         System.out.println("add          - Adauga o noua pereche (masina, sofer)");
@@ -125,7 +114,13 @@ public class CarRentalSystem {
                     printCommandsList();
                     break;
                 case "add":
+                    try{
                     rentCar(getPlateNo(), getOwnerName());
+                    } catch (ForbiddenName e) {
+                        System.out.println(e.getMessage());
+                    } catch (BrokenCar e){
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "check":
                     System.out.println(isCarRent(getPlateNo()));

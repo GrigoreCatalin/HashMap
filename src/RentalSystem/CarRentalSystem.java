@@ -1,18 +1,45 @@
 package RentalSystem;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Scanner;
 
 import Exception.ForbiddenName;
 import Exception.BrokenCar;
-public class CarRentalSystem {
+public class CarRentalSystem implements Serializable {
 
     private static Scanner sc = new Scanner(System.in);
     private HashMap<String, String> rentedCars = new HashMap<String, String>(100, 0.5f);
     private RentedCars numberAndListCars;
     private int totalRented;
     private Hashtable<String, RentedCars> rentedCarsForOwners = new Hashtable<String, RentedCars>(100, 0.5f);
+
+    private static final long serialVersionUID = 1L;
+
+    public void writeToBinaryFile(HashMap<String, String> rentedCars, Hashtable<String, RentedCars> rentedCarsForOwners) throws IOException {
+        try (ObjectOutputStream binaryFileOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("List Cars and Owners.dat")))) {
+            binaryFileOut.writeObject(rentedCars);
+        }
+        try (ObjectOutputStream binaryFileOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("List Cars per Owner.dat")))) {
+            binaryFileOut.writeObject(rentedCarsForOwners);
+        }
+    }
+
+    public void readFromBinaryFile() throws IOException {
+        try (ObjectInputStream binaryFileOutList = new ObjectInputStream(new BufferedInputStream(new FileInputStream("List Cars and Owners.dat")))) {
+            this.rentedCars = (HashMap<String, String>) binaryFileOutList.readObject();
+        } catch (ClassNotFoundException e) {
+            System.out.println("A aparut o eroare: " + e.getMessage());
+        }
+
+        try (ObjectInputStream binaryFileOutWaitList = new ObjectInputStream(new BufferedInputStream(new FileInputStream("List Cars per Owner.dat")))) {
+            this.rentedCarsForOwners = (Hashtable<String, RentedCars>) binaryFileOutWaitList.readObject();
+        } catch (ClassNotFoundException e) {
+            System.out.println("A aparut o eroare: " + e.getMessage());
+        }
+    }
 
     private String getPlateNo() {
         System.out.println("Introduceti numarul de inmatriculare:");
@@ -106,6 +133,14 @@ public class CarRentalSystem {
 
     public void run() {
         boolean quit = false;
+
+        try {
+            readFromBinaryFile();
+        } catch (IOException e) {
+            System.out.println("Deocamdata nu exista nicio varianta de back-up");
+        }
+
+
         while (!quit) {
             System.out.println("Asteapta comanda: (help - Afiseaza lista de comenzi)");
             String command = sc.nextLine();
@@ -139,6 +174,12 @@ public class CarRentalSystem {
                     checkName(sc.nextLine());
                     break;
                 case "quit":
+                    try {
+                       writeToBinaryFile(this.rentedCars, this.rentedCarsForOwners);
+                    } catch (IOException e) {
+                        System.out.println("S-a produs o eroare");
+                    }
+
                     System.out.println("Aplicatia se inchide...");
                     quit = true;
                     break;
